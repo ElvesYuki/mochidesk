@@ -44,6 +44,7 @@ docs/memory/ 项目长期记忆
 - 基础拖拽、实时位置保存、位置恢复、边缘吸附和离屏修正逻辑
 - 前端模拟的系统状态流
 - 小木藕像素风 SVG 形象、头顶连续旋转豆芽和红温态基础动效
+- Tauri runtime 下的真实 CPU / 内存快照轮询链路，Web 预览环境保留模拟状态流
 
 尚未稳定落地的方向：
 
@@ -85,8 +86,20 @@ docs/memory/ 项目长期记忆
 - `HomePage.svelte` 当前主要负责页面装配、拖拽中的 UI 状态和模拟监控流接入
 - `src/lib/services/pet-window.ts` 已承担窗口拖拽、位置持久化、离屏修正、多显示器恢复和边缘吸附
 - `MochiAvatar.svelte` 已实现像素风 SVG 主体、连续旋转豆芽、红温蒸汽 / 融化态、更大的表情和可见豆豆手
+- `MochiAvatar.svelte` 当前已把造型路径和样式变量计算拆到 feature 内部模块，降低单文件复杂度
+- `MochiAvatar.svelte` 当前已按本体、手部、表情、热态效果拆成局部组件，主组件主要负责装配
 - 手部当前已有轻微待机摆动与高光，后续可继续扩展为点按、持物等动作
-- `system-monitor.ts` 当前仍是占位 / 模拟实现，尚未接真实系统监控；每段模拟状态持续时间已拉长
+- `system-monitor.ts` 当前已支持在 Tauri runtime 轮询真实 CPU / 内存快照；单独前端预览时仍保留模拟实现
+- `system-monitor.ts` 当前对真实监控加入了“快起慢落”的平滑和小幅抖动死区，减少瞬时波动导致的情绪跳变
+- Rust 侧 `monitor` 模块当前已提供最小系统快照状态管理，供 Tauri 命令读取
+- `motion.ts` 当前已把 CPU / 内存共同映射到情绪、呼吸节奏、浮动幅度和配色，动作链路不再只依赖 CPU
+- 当前状态展示模型已拉开为轻载、警觉、红温三段，`alert` 不再只是一行标签，而会体现在表情、手势和配色上
+- 当前已支持点击桌宠时的短促交互反馈，会额外触发表情收紧和手部抬动，再回到当前负载状态
+- 点击反馈当前已加入轻微整体压缩/弹回，且会按轻载、警觉、红温三种状态分化点击反应
+- 点击时当前还会短暂朝点击方向偏头 / 偏视线，形成一次性“看向点击点”的回应感
+- 拖拽桌宠时当前会进入轻微“被拎起”姿态，包含整体上提、身体收紧、手臂跟随上抬和表情微绷
+- 鼠标靠近桌宠时当前会触发一次轻量“预备反应”，短暂警觉并稍微朝进入方向偏一下，再自然回落
+- 鼠标离开桌宠时当前会有一个很轻的“松一口气”回弹，红温态在 hover 时也会表现得更烦躁一些
 - Rust 侧已存在 `commands`、`window`、`monitor` 模块和统一 `lib.rs` 注册入口
 - `src-tauri/tauri.conf.json` 当前桌宠窗口尺寸为 `90 x 108`
 
@@ -95,11 +108,11 @@ docs/memory/ 项目长期记忆
 - `src/routes/+page.svelte`
   当前前端页面入口，负责挂载 `HomePage.svelte`
 - `src/lib/features/home/HomePage.svelte`
-  当前桌宠页面装配入口，负责拖拽中的 UI 状态、模拟监控流接入和头像挂载
+  当前桌宠页面装配入口，负责拖拽中的 UI 状态、真实监控流接入、点击交互脉冲和头像挂载
 - `src/lib/features/mochi-avatar/MochiAvatar.svelte`
   当前小木藕主视觉组件，包含像素主体、豆芽旋转、红温态、表情、手部和局部动画
 - `src/lib/services/system-monitor.ts`
-  当前系统状态占位 / 模拟实现；后续接真实 CPU / 内存监控时优先从这里切入
+  当前系统监控入口，负责在 Tauri runtime 轮询真实 CPU / 内存快照，并在 Web 预览环境回退到模拟实现
 - `src/lib/animation/motion.ts`
   当前系统状态到动作参数的映射入口，负责把监控快照转换为 `MotionProfile`
 - `src/lib/services/pet-window.ts`
