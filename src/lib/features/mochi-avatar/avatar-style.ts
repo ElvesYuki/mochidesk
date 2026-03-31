@@ -104,6 +104,13 @@ export function getAvatarStyle(
     0.82,
     1.5 - heatAlpha * 0.45 - (isBusy && isInteracting ? 0.18 : 0) - (isBusy && isHovering ? 0.12 : 0),
   );
+  const busyLoopRotate = isBusy ? `${(-1.2 - heatAlpha * 1.8).toFixed(2)}deg` : "0deg";
+  const busyLoopShiftX = isBusy ? `${(0.9 + heatAlpha * 1.5).toFixed(2)}px` : "0px";
+  const busyLoopLiftY = isBusy ? `${(-0.8 - heatAlpha * 1.6).toFixed(2)}px` : "0px";
+  const busyLoopScaleX = isBusy ? (1 + heatAlpha * 0.012).toFixed(3) : "1";
+  const busyLoopScaleY = isBusy ? (1 - heatAlpha * 0.018).toFixed(3) : "1";
+  const busyLoopSeconds = isBusy ? Math.max(1.6, 2.35 - heatAlpha * 0.55) : 2.8;
+  const busyArmFidget = isBusy ? `${(0.55 + heatAlpha * 0.9).toFixed(2)}px` : "0px";
   const dragLeftLift = isDragging
     ? (isBusy ? "calc(var(--arm-bob-distance) * -1.9)" : "calc(var(--arm-bob-distance) * -1.6)")
     : "0px";
@@ -132,6 +139,13 @@ export function getAvatarStyle(
     `--tap-left-lift:${tapLeftLift}`,
     `--tap-right-lift:${tapRightLift}`,
     `--tap-hand-scale-boost:${tapHandScaleBoost}`,
+    `--busy-loop-rotate:${busyLoopRotate}`,
+    `--busy-loop-shift-x:${busyLoopShiftX}`,
+    `--busy-loop-lift-y:${busyLoopLiftY}`,
+    `--busy-loop-scale-x:${busyLoopScaleX}`,
+    `--busy-loop-scale-y:${busyLoopScaleY}`,
+    `--busy-loop-seconds:${busyLoopSeconds.toFixed(2)}s`,
+    `--busy-arm-fidget:${busyArmFidget}`,
     `--face-y:${faceOffset}px`,
     `--face-look-x:${faceLookX}`,
     `--face-look-y:${faceLookY}`,

@@ -43,10 +43,10 @@ export function createMotionProfile(snapshot: SystemMonitorSnapshot): MotionProf
       pulseScale: 1.02,
       floatOffset: 8,
       palette: {
-        shell: "#d6a778",
-        shellShade: "#b97f4f",
-        blush: "#f2b0a5",
-        accent: "#7f5637",
+        shell: "#ead0b2",
+        shellShade: "#d4a883",
+        blush: "#f5c5bc",
+        accent: "#8c6d56",
       },
       energy: 0.18,
     };

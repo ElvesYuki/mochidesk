@@ -9,9 +9,16 @@
   import { createPetWindowController } from "$lib/services/pet-window";
   import MochiAvatar from "$lib/features/mochi-avatar/MochiAvatar.svelte";
 
+  type DebugCycleStage = "idle" | "calm" | "alert" | "busy";
+
+  const DEBUG_CYCLE_STAGES: DebugCycleStage[] = ["idle", "calm", "alert", "busy"];
+  const DEBUG_CYCLE_INTERVAL_MS = 5000;
+
   let snapshot: SystemMonitorSnapshot = getSystemMonitorSnapshot();
   let motion = createMotionProfile(snapshot);
   let isDragging = false;
+  let debugCycleEnabled = false;
+  let debugCycleStage: DebugCycleStage = "idle";
   let interactionPulse = 0;
   let interactionTimer: ReturnType<typeof setTimeout> | null = null;
   let hoverPulse = 0;
@@ -22,6 +29,46 @@
   let interactionLookX = 0;
   let interactionLookY = 0;
   const petWindow = createPetWindowController();
+
+  function getDebugCycleSnapshot(stage: DebugCycleStage): SystemMonitorSnapshot {
+    if (stage === "idle") {
+      return {
+        cpuLoad: null,
+        memoryLoad: null,
+        source: "simulated",
+      };
+    }
+
+    if (stage === "calm") {
+      return {
+        cpuLoad: 0.22,
+        memoryLoad: 0.34,
+        source: "simulated",
+      };
+    }
+
+    if (stage === "alert") {
+      return {
+        cpuLoad: 0.54,
+        memoryLoad: 0.58,
+        source: "simulated",
+      };
+    }
+
+    return {
+      cpuLoad: 0.92,
+      memoryLoad: 0.78,
+      source: "simulated",
+    };
+  }
+
+  function getEffectiveMotion(nextSnapshot: SystemMonitorSnapshot) {
+    if (!debugCycleEnabled) {
+      return createMotionProfile(nextSnapshot);
+    }
+
+    return createMotionProfile(getDebugCycleSnapshot(debugCycleStage));
+  }
 
   function triggerInteractionPulse(event: PointerEvent) {
     const target = event.currentTarget;
@@ -96,6 +143,20 @@
     }
   }
 
+  function handleDoubleClick(event: MouseEvent) {
+    if (!event.shiftKey) {
+      return;
+    }
+
+    if (event.cancelable) {
+      event.preventDefault();
+    }
+
+    debugCycleEnabled = !debugCycleEnabled;
+    debugCycleStage = "idle";
+    motion = getEffectiveMotion(snapshot);
+  }
+
   function handlePointerEnter(event: PointerEvent) {
     if (hasHoverPrimed || isDragging) {
       return;
@@ -142,6 +203,7 @@
   onMount(() => {
     let isDisposed = false;
     let unlistenWindowMoved: (() => void) | null = null;
+    let debugCycleTimer: ReturnType<typeof setInterval> | null = null;
 
     if (petWindow.isAvailable()) {
       void petWindow
@@ -160,10 +222,21 @@
 
     const monitor = createSystemMonitor((nextSnapshot) => {
       snapshot = nextSnapshot;
-      motion = createMotionProfile(nextSnapshot);
+      motion = getEffectiveMotion(nextSnapshot);
     });
 
     monitor.start();
+
+    debugCycleTimer = setInterval(() => {
+      if (!debugCycleEnabled) {
+        return;
+      }
+
+      const currentIndex = DEBUG_CYCLE_STAGES.indexOf(debugCycleStage);
+      const nextIndex = (currentIndex + 1) % DEBUG_CYCLE_STAGES.length;
+      debugCycleStage = DEBUG_CYCLE_STAGES[nextIndex];
+      motion = getEffectiveMotion(snapshot);
+    }, DEBUG_CYCLE_INTERVAL_MS);
 
     return () => {
       isDisposed = true;
@@ -175,6 +248,9 @@
       }
       if (releaseTimer !== null) {
         clearTimeout(releaseTimer);
+      }
+      if (debugCycleTimer !== null) {
+        clearInterval(debugCycleTimer);
       }
       unlistenWindowMoved?.();
       monitor.stop();
@@ -198,6 +274,7 @@
     onpointerenter={handlePointerEnter}
     onpointerleave={handlePointerLeave}
     onpointerdown={handlePointerDown}
+    ondblclick={handleDoubleClick}
   >
     <div class="pet-stage">
       <MochiAvatar
@@ -209,6 +286,10 @@
         interactionLookX={interactionLookX}
         interactionLookY={interactionLookY}
       />
+
+      {#if debugCycleEnabled}
+        <div class="debug-badge">{debugCycleStage} loop</div>
+      {/if}
     </div>
   </section>
 </main>
@@ -283,6 +364,22 @@
     align-items: center;
     padding: 0;
     overflow: hidden;
+    position: relative;
+  }
+
+  .debug-badge {
+    position: absolute;
+    top: 8px;
+    right: 6px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: color-mix(in srgb, #7d1d1d 84%, transparent);
+    color: #fff7f5;
+    font-size: 10px;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+    pointer-events: none;
+    box-shadow: 0 2px 6px rgb(92 15 22 / 0.18);
   }
 
   @media (max-width: 640px) {

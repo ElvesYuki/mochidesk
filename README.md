@@ -75,6 +75,91 @@ MochiDesk 当前优先解决的是“桌面端的实时陪伴式状态反馈”�
 - 随机走动、碰撞、复杂状态机
 - 完整多端统一架构
 
+## 当前状态切换规则
+
+当前实现里，桌宠的状态由 `src/lib/animation/motion.ts` 根据 CPU / 内存快照映射为 `idle / calm / alert / busy` 四档。
+
+### 输入规则
+
+- 当 `cpuLoad === null && memoryLoad === null` 时，直接进入 `idle`
+- 只要有有效监控值，就会继续计算综合能量 `energy`
+- CPU 是主导项，内存是辅助项，但高内存会额外推高压力感
+
+当前实现使用的综合能量公式为：
+
+```ts
+const cpuEnergy = cpuLoad ?? memoryLoad ?? 0;
+const memoryEnergy = memoryLoad ?? cpuLoad ?? 0;
+const baseEnergy = cpuEnergy * 0.7 + memoryEnergy * 0.3;
+const pressureBoost = Math.max(0, memoryEnergy - 0.72) * 0.22;
+const energy = Math.min(1, baseEnergy + pressureBoost);
+```
+
+这意味着：
+
+- CPU 占比更高，主要决定动作节奏和紧张感
+- 内存主要负责“持续压力”修正
+- 当内存超过 `0.72` 后，会额外增加一些热态倾向
+
+### 状态阈值
+
+- `idle`
+  条件：`cpuLoad === null && memoryLoad === null`
+- `busy`
+  条件：满足任一项
+  - `energy >= 0.72`
+  - `cpuLoad >= 0.78`
+  - `memoryLoad >= 0.88`
+- `alert`
+  条件：未进入 `busy`，但满足任一项
+  - `energy >= 0.4`
+  - `cpuLoad >= 0.48`
+  - `memoryLoad >= 0.58`
+- `calm`
+  条件：有有效监控值，但未达到 `alert` 或 `busy`
+
+可以把它理解为：
+
+- `idle`：没有监控数据
+- `calm`：低负载，正常待机
+- `alert`：中等负载，开始警觉
+- `busy`：高负载或高内存压力，进入红温
+
+### 平滑与降抖
+
+真实监控链路不会直接使用原始快照，而是先经过一层平滑处理，再参与状态切换：
+
+- 上升更快，下降更慢
+- 小幅波动会被死区忽略
+- 内存平滑也会比 CPU 更稳一点
+
+这样做的目的，是避免 CPU 瞬时尖峰让桌宠情绪来回抖动。
+
+## 调试状态循环模式
+
+当前前端内置了一个本地调试用的模式循环开关，方便直接观察整套状态差异，而不必手动压 CPU。
+
+触发方式：
+
+- `Shift + 双击桌宠` 开启
+- 再次 `Shift + 双击桌宠` 关闭
+
+开启后会按以下顺序自动轮播，每档大约持续 `5` 秒：
+
+1. `idle`
+2. `calm`
+3. `alert`
+4. `busy`
+
+开启时，桌宠右上角会出现一个轻量角标，例如：
+
+- `idle loop`
+- `calm loop`
+- `alert loop`
+- `busy loop`
+
+这个模式只用于本地观察状态表现，不会修改底层真实监控逻辑。
+
 ## 开发原则
 
 - 优先做桌面端 MVP，再决定何时扩展 Web 端与移动端

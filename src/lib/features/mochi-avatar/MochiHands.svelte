@@ -106,7 +106,9 @@
 
     50% {
       transform: rotate(var(--left-arm-rotate)) scale(var(--hand-scale))
-        translateY(calc(var(--drag-left-lift) + var(--arm-bob-distance) * -1));
+        translateY(
+          calc(var(--drag-left-lift) + var(--arm-bob-distance) * -1 - var(--busy-arm-fidget))
+        );
     }
   }
 
@@ -119,7 +121,7 @@
 
     50% {
       transform: rotate(var(--right-arm-rotate)) scale(var(--hand-scale))
-        translateY(calc(var(--drag-right-lift) + var(--arm-bob-distance)));
+        translateY(calc(var(--drag-right-lift) + var(--arm-bob-distance) - var(--busy-arm-fidget)));
     }
   }
 

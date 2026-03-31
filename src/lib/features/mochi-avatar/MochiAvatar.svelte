@@ -194,6 +194,7 @@
       scaleY(var(--tap-scale-y))
       rotate(var(--tap-tilt));
     transition: transform 0.3s cubic-bezier(0.18, 1.2, 0.26, 1);
+    animation: busy-fidget var(--busy-loop-seconds) ease-in-out infinite;
   }
 
   .avatar-bob {
@@ -231,6 +232,36 @@
     50% {
       transform: scale(var(--avatar-scale))
         scaleY(calc(var(--melt-squash) * var(--drag-body-scale-y)));
+    }
+  }
+
+  @keyframes busy-fidget {
+    0%,
+    100% {
+      transform:
+        translateY(var(--tap-shift-y))
+        translateX(0)
+        scaleX(var(--tap-scale-x))
+        scaleY(var(--tap-scale-y))
+        rotate(var(--tap-tilt));
+    }
+
+    30% {
+      transform:
+        translateY(calc(var(--tap-shift-y) + var(--busy-loop-lift-y)))
+        translateX(var(--busy-loop-shift-x))
+        scaleX(calc(var(--tap-scale-x) * var(--busy-loop-scale-x)))
+        scaleY(calc(var(--tap-scale-y) * var(--busy-loop-scale-y)))
+        rotate(calc(var(--tap-tilt) + var(--busy-loop-rotate)));
+    }
+
+    62% {
+      transform:
+        translateY(calc(var(--tap-shift-y) + var(--busy-loop-lift-y) * 0.4))
+        translateX(calc(var(--busy-loop-shift-x) * -0.72))
+        scaleX(calc(var(--tap-scale-x) * var(--busy-loop-scale-y)))
+        scaleY(calc(var(--tap-scale-y) * var(--busy-loop-scale-x)))
+        rotate(calc(var(--tap-tilt) + var(--busy-loop-rotate) * -0.58));
     }
   }
 
