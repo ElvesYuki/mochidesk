@@ -24,15 +24,68 @@ MochiDesk 当前优先解决的是“桌面端的实时陪伴式状态反馈”�
 - 小尺寸、无边框、透明背景、置顶显示的桌面窗口
 - 基础拖拽、位置恢复、边缘吸附和屏幕可见区域修正
 - Tauri runtime 下的真实 CPU / 内存快照轮询，Web 预览环境保留模拟状态流
+- `CodexStatus` 状态骨架与 `codex-monitor` service，已预留后续接入真实 Codex 运行状态的边界
+- Tauri runtime 下已接入第一版 `Local Auto` Codex 状态读取，会扫描本机 `~/.codex/sessions/**/*.jsonl` 中最近活跃的 rollout 文件
 - 小木藕像素风 SVG 形象与基础动效表现
 - Rust 侧 `commands`、`window`、`monitor` 模块和统一注册入口
 
 ### 当前重点
 
 - 真实监控链路的平滑策略、刷新频率与稳定性
+- 逐步把 Codex 运行状态监听接入 `src-tauri/src/monitor/`，再通过 `src/lib/services/codex-monitor.ts` 提供前端语义状态
 - 更清晰的系统状态模型和动画映射抽象
 - 前端页面职责继续拆分，避免入口文件长期承载过多逻辑
 - 透明窗口、置顶、拖拽吸附等平台相关能力的持续验证
+
+## Codex 本地自动发现
+
+当前 Tauri runtime 下，MochiDesk 已实现第一版 `Local Auto` Codex 状态读取：
+
+- 扫描本机 `~/.codex/sessions/` 下最近活跃的 `rollout-*.jsonl`
+- 读取最近一段事件窗口
+- 先映射为较稳的几档语义状态：
+  - `idle`
+  - `thinking`
+  - `acting`
+  - `waiting_input`
+  - `notice`
+  - `celebrate`
+  - `error`
+  - `error_burst`
+  - `done`
+
+当前这版规则偏保守，目标是先稳定而不是一次性做全：
+
+- 检测到 `reasoning` 或最近用户消息时，倾向 `thinking`
+- 检测到工具调用时，倾向 `acting`
+- 检测到 `task_complete` 或 `final_answer` 时，先短暂视为 `done`，随后回落为 `waiting_input`
+- 检测到工具输出里的明确失败信号时，映射为 `error`
+- 最近一段时间没有新事件时，回到 `idle`
+
+当前这些 Codex 语义状态也已经开始影响小木藕的动作表现：
+
+- `thinking`
+  会更专注一点，视线和身体更收，思考气泡与表情也会带一点轻微聚焦节奏
+- `acting`
+  手部会出现更明显的左右错峰敲击节奏，整体节奏更急一点
+- `waiting_input`
+  会更明显地抬头停住、看向你，像在等你下一句
+- `notice`
+  会更像“突然收到提醒 / 需要你注意”，带一点惊讶上抬
+- `celebrate`
+  会更像“顺利收尾”，比普通 `done` 更开心、更跳一点
+- `error`
+  会先短暂绷住，再带一点泄气下坠
+- `error_burst`
+  会更像“刚炸了一下”，比普通 `error` 更急、更明显
+- `done`
+  会有一个短促亮起和松劲回弹，再自然回落
+
+当前已知限制：
+
+- 当前只取最近活跃 rollout 文件，尚未做多会话聚合
+- 状态识别基于本地 session 文件结构，后续需要继续验证兼容性
+- `waiting_input` 当前主要代表“完成后等待下一句”，还未覆盖更细的审批 / 确认场景
 
 ### 非当前优先级
 
@@ -137,7 +190,9 @@ const energy = Math.min(1, baseEnergy + pressureBoost);
 
 ## 调试状态循环模式
 
-当前前端内置了一个本地调试用的模式循环开关，方便直接观察整套状态差异，而不必手动压 CPU。
+当前前端内置了两组本地调试循环开关，分别用于观察系统负载链路和 Codex 语义状态链路。
+
+### 系统状态循环
 
 触发方式：
 
@@ -158,7 +213,49 @@ const energy = Math.min(1, baseEnergy + pressureBoost);
 - `alert loop`
 - `busy loop`
 
-这个模式只用于本地观察状态表现，不会修改底层真实监控逻辑。
+### Codex 状态循环
+
+触发方式：
+
+- `Alt + 双击桌宠` 开启
+- 再次 `Alt + 双击桌宠` 关闭
+
+开启后会按以下顺序自动轮播，每档大约持续 `5` 秒：
+
+1. `idle`
+2. `thinking`
+3. `acting`
+4. `waiting_input`
+5. `notice`
+6. `celebrate`
+7. `error`
+8. `error_burst`
+9. `done`
+
+开启时，调试角标和开发态信息面板都会同步显示当前 Codex 状态，方便直接观察动作差异。
+
+这两组模式都只用于本地观察状态表现，不会修改底层真实监控逻辑。
+
+当前比较适合重点观察的差异是：
+
+- `thinking`
+  更像“专注想事”，视线略收、身体略提
+- `acting`
+  更像“正在敲代码或跑工具”，左右手节奏不完全同步，会显得更忙
+- `waiting_input`
+  更像“停下来等你回应”，身体会更定住一点，头脸更上抬
+- `notice`
+  更像“有通知 / 需要确认”，会明显上提并出现提醒标记
+- `celebrate`
+  更像“顺利结束后开心一下”，会更轻快地跳一下
+- `error`
+  更像“出岔子了”，会有更明显的下坠和紧张感
+- `error_burst`
+  更像“刚刚报错炸了一下”，会更短更猛地绷住再掉一点
+- `done`
+  更像“刚做完”，会先短暂松一口气，再回到等待态
+
+当前原生侧对 `notice / celebrate / error_burst` 的识别还是第一版保守关键词匹配，后续建议继续拿真实 rollout 样本校准。
 
 ## 开发原则
 

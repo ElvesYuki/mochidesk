@@ -4,6 +4,7 @@ import {
   getCurrentWindow,
   monitorFromPoint,
   PhysicalPosition,
+  PhysicalSize,
   type Monitor,
 } from "@tauri-apps/api/window";
 
@@ -28,6 +29,7 @@ export interface PetWindowController {
   listenForMove: (
     onMove?: (position: StoredWindowPosition) => void,
   ) => Promise<() => void>;
+  resizeWindow: (width: number, height: number) => Promise<void>;
 }
 
 export function isTauriRuntime(): boolean {
@@ -292,6 +294,14 @@ export function createPetWindowController(): PetWindowController {
         writeStoredWindowPosition(position);
         onMove?.(position);
       });
+    },
+
+    async resizeWindow(width: number, height: number): Promise<void> {
+      if (!isTauriRuntime()) {
+        return;
+      }
+
+      await getCurrentWindow().setSize(new PhysicalSize(width, height));
     },
   };
 }

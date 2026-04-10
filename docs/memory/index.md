@@ -90,9 +90,19 @@ docs/memory/ 项目长期记忆
 - `MochiAvatar.svelte` 当前已按本体、手部、表情、热态效果拆成局部组件，主组件主要负责装配
 - 手部当前已有轻微待机摆动与高光，后续可继续扩展为点按、持物等动作
 - `system-monitor.ts` 当前已支持在 Tauri runtime 轮询真实 CPU / 内存快照；单独前端预览时仍保留模拟实现
+- `codex-monitor.ts` 当前已建立 Codex 运行状态的前端 service 骨架与原生占位接口，后续可替换为真实监听来源
+- Rust 侧 `monitor` 模块当前已接入第一版 `Local Auto` Codex 状态读取，会扫描本机 `~/.codex/sessions/` 中最近活跃的 rollout 文件
+- Rust 侧 `monitor` 模块当前已能从本地 rollout 事件中识别 `thinking / acting / done / waiting_input / error` 的第一版真实状态
 - `system-monitor.ts` 当前对真实监控加入了“快起慢落”的平滑和小幅抖动死区，减少瞬时波动导致的情绪跳变
 - Rust 侧 `monitor` 模块当前已提供最小系统快照状态管理，供 Tauri 命令读取
 - `motion.ts` 当前已把 CPU / 内存共同映射到情绪、呼吸节奏、浮动幅度和配色，动作链路不再只依赖 CPU
+- `motion.ts` 当前已预留 Codex 运行状态输入，可在不改页面结构的情况下继续把 `thinking / acting / waiting_input / error` 映射到动作表现
+- 小木藕当前已开始根据真实 Codex 语义状态调整姿态与表情，`thinking / acting / waiting_input / error / done` 不再只是调试标签
+- 小木藕当前已继续扩展到 `notice / celebrate / error_burst` 三类更细的事件态，便于把通知、顺利收尾和爆发式报错区分开
+- 当前已进一步拉开 `acting` 与 `waiting_input` 的动作语义：前者更像左右手错峰敲击，后者更像抬头停住等用户回应
+- `thinking` 当前也补上了更轻的专注节奏，气泡和表情会有一点聚焦式停顿，而不是只静态挂着
+- `done` 当前也补上了更明确但很短的完成回弹，小星和表情会先亮一下再松回等待态
+- `error` 当前也补上了“绷住后下坠”的短收尾，汗滴和表情不再只是静态紧张
 - 当前状态展示模型已拉开为轻载、警觉、红温三段，`alert` 不再只是一行标签，而会体现在表情、手势和配色上
 - 当前已支持点击桌宠时的短促交互反馈，会额外触发表情收紧和手部抬动，再回到当前负载状态
 - 点击反馈当前已加入轻微整体压缩/弹回，且会按轻载、警觉、红温三种状态分化点击反应
@@ -102,8 +112,10 @@ docs/memory/ 项目长期记忆
 - 鼠标离开桌宠时当前会有一个很轻的“松一口气”回弹，红温态在 hover 时也会表现得更烦躁一些
 - 持续高负载时当前会额外叠一层低频“小循环烦躁动作”，让红温不只是一瞬间热起来，而是会显得更待不住
 - 当前已提供本地调试用的模式循环开关，可按 `idle / calm / alert / busy` 每档约 5 秒轮播，直接观察整套状态差异
+- 当前也已提供独立的 Codex 调试状态循环，可按 `idle / thinking / acting / waiting_input / error / done` 每档约 5 秒轮播
+- 当前独立的 Codex 调试状态循环已扩展到 `idle / thinking / acting / waiting_input / notice / celebrate / error / error_burst / done`
 - Rust 侧已存在 `commands`、`window`、`monitor` 模块和统一 `lib.rs` 注册入口
-- `src-tauri/tauri.conf.json` 当前桌宠窗口尺寸为 `90 x 108`
+- `src-tauri/tauri.conf.json` 当前桌宠窗口尺寸为 `82 x 94`
 
 ## 当前核心文件地图
 
@@ -136,6 +148,11 @@ docs/memory/ 项目长期记忆
 - 模拟监控、动画映射、窗口行为之间的边界还不够稳定
 - 透明窗口、置顶、拖拽吸附等能力存在平台差异，需要持续验证
 - 临时视觉稿和正式代码并存时，容易让文档与实际落地状态混淆
+
+## 当前规划文档
+
+- `docs/plans/codex-状态来源与桌宠行为规划.md`
+  用于记录 Codex 状态来源、语义状态聚合方案，以及后续可逐步推进的功能规划池
 
 ## 协作约定
 

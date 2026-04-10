@@ -15,9 +15,9 @@
       {
         "title": "MochiDesk",
         "label": "main",
-        "width": 90,
-        "height": 108,
-        "minWidth": 78,
+        "width": 82,
+        "height": 106,
+        "minWidth": 72,
         "minHeight": 90,
         "decorations": false,
         "transparent": true,

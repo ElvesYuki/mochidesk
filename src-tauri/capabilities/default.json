@@ -8,8 +8,13 @@
     "core:window:allow-available-monitors",
     "core:window:allow-current-monitor",
     "core:window:allow-monitor-from-point",
+    "core:window:allow-create",
+    "core:window:allow-get-all-windows",
+    "core:window:allow-show",
+    "core:window:allow-set-focus",
     "core:window:allow-start-dragging",
     "core:window:allow-outer-position",
-    "core:window:allow-set-position"
+    "core:window:allow-set-position",
+    "core:webview:allow-create-webview-window"
   ]
 }

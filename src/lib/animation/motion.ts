@@ -1,3 +1,4 @@
+import type { CodexStatusSnapshot } from "$lib/models/codex-status";
 import type { SystemMonitorSnapshot } from "$lib/services/system-monitor";
 
 export type MochiMood = "idle" | "calm" | "alert" | "busy";
@@ -17,6 +18,8 @@ export interface MotionProfile {
   floatOffset: number;
   palette: MotionPalette;
   energy: number;
+  codexActivity: CodexStatusSnapshot["activity"];
+  codexDetail: string | null;
 }
 
 function clampLoad(value: number | null): number | null {
@@ -31,9 +34,49 @@ function mixColor(idleColor: string, activeColor: string, ratio: number): string
   return `color-mix(in srgb, ${idleColor} ${Math.round((1 - ratio) * 100)}%, ${activeColor} ${Math.round(ratio * 100)}%)`;
 }
 
-export function createMotionProfile(snapshot: SystemMonitorSnapshot): MotionProfile {
+function getCodexEnergyBoost(status: CodexStatusSnapshot): number {
+  if (status.activity === "acting") {
+    return 0.08;
+  }
+
+  if (status.activity === "notice") {
+    return 0.065;
+  }
+
+  if (status.activity === "celebrate") {
+    return 0.04;
+  }
+
+  if (status.activity === "thinking") {
+    return 0.045;
+  }
+
+  if (status.activity === "error_burst") {
+    return 0.16;
+  }
+
+  if (status.activity === "error") {
+    return 0.12;
+  }
+
+  if (status.activity === "waiting_input") {
+    return 0.03;
+  }
+
+  return 0;
+}
+
+export function createMotionProfile(
+  snapshot: SystemMonitorSnapshot,
+  codexStatus: CodexStatusSnapshot = {
+    activity: "idle",
+    source: "placeholder",
+    detail: null,
+  },
+): MotionProfile {
   const cpuLoad = clampLoad(snapshot.cpuLoad);
   const memoryLoad = clampLoad(snapshot.memoryLoad);
+  const codexEnergyBoost = getCodexEnergyBoost(codexStatus);
 
   if (cpuLoad === null && memoryLoad === null) {
     return {
@@ -49,6 +92,8 @@ export function createMotionProfile(snapshot: SystemMonitorSnapshot): MotionProf
         accent: "#8c6d56",
       },
       energy: 0.18,
+      codexActivity: codexStatus.activity,
+      codexDetail: codexStatus.detail,
     };
   }
 
@@ -56,7 +101,7 @@ export function createMotionProfile(snapshot: SystemMonitorSnapshot): MotionProf
   const memoryEnergy = memoryLoad ?? cpuLoad ?? 0;
   const baseEnergy = cpuEnergy * 0.7 + memoryEnergy * 0.3;
   const pressureBoost = Math.max(0, memoryEnergy - 0.72) * 0.22;
-  const energy = Math.min(1, baseEnergy + pressureBoost);
+  const energy = Math.min(1, baseEnergy + pressureBoost + codexEnergyBoost);
 
   let mood: MochiMood = "calm";
   if (energy >= 0.72 || cpuEnergy >= 0.78 || memoryEnergy >= 0.88) {
@@ -115,5 +160,7 @@ export function createMotionProfile(snapshot: SystemMonitorSnapshot): MotionProf
           : mixColor("#4f4033", "#7d1d1d", Math.min(1, warmth * 0.82 + flush * 0.18)),
     },
     energy,
+    codexActivity: codexStatus.activity,
+    codexDetail: codexStatus.detail,
   };
 }

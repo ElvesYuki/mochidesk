@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import type { MotionProfile } from "$lib/animation/motion";
   import MochiBody from "$lib/features/mochi-avatar/MochiBody.svelte";
+  import MochiCodexEffects from "$lib/features/mochi-avatar/MochiCodexEffects.svelte";
   import MochiFace from "$lib/features/mochi-avatar/MochiFace.svelte";
   import MochiHands from "$lib/features/mochi-avatar/MochiHands.svelte";
   import MochiHeatEffects from "$lib/features/mochi-avatar/MochiHeatEffects.svelte";
@@ -154,11 +155,14 @@
 
       <g class="avatar-bob">
         <MochiBody variant="top" {spinAngle} />
+        <MochiCodexEffects activity={motion.codexActivity} layer="back" />
+        <MochiCodexEffects activity={motion.codexActivity} layer="front" role="terminal" />
 
         <g class="body-group">
-          <MochiHands layer="back" {interactionPulse} />
+          <MochiHands layer="back" activity={motion.codexActivity} {interactionPulse} />
           <MochiBody variant="shell" bodyPath={getBodyPath(motion)} />
-          <MochiHands layer="front" {interactionPulse} />
+          <MochiCodexEffects activity={motion.codexActivity} layer="back" role="keyboard" />
+          <MochiHands layer="front" activity={motion.codexActivity} {interactionPulse} />
           <MochiHeatEffects variant="melt" />
           <MochiFace />
         </g>
@@ -171,7 +175,7 @@
   .avatar-frame {
     display: grid;
     justify-items: center;
-    align-items: center;
+    align-items: end;
     width: 100%;
     height: 100%;
     overflow: hidden;
@@ -184,6 +188,7 @@
     height: auto;
     overflow: visible;
     pointer-events: none;
+    transform: translateY(9px);
   }
 
   .avatar-interaction {
@@ -199,7 +204,9 @@
 
   .avatar-bob {
     animation: bob var(--breathe-speed) ease-in-out infinite;
-    transform: translateY(calc(var(--drag-lift-y) + var(--float-distance) * -0.08));
+    transform: translateY(
+      calc(var(--drag-lift-y) + var(--codex-body-bounce) + var(--float-distance) * -0.08)
+    );
     transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
@@ -213,12 +220,17 @@
   @keyframes bob {
     0%,
     100% {
-      transform: translateY(calc(var(--drag-lift-y) + var(--float-distance) * -0.08));
+      transform: translateY(
+        calc(var(--drag-lift-y) + var(--codex-body-bounce) + var(--float-distance) * -0.08)
+      );
     }
 
     50% {
       transform: translateY(
-        calc(var(--drag-lift-y) + var(--melt-drop) + var(--float-distance) * 0.08)
+        calc(
+          var(--drag-lift-y) + var(--codex-body-bounce) + var(--melt-drop) +
+            var(--float-distance) * 0.08
+        )
       );
     }
   }
