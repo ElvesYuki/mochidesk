@@ -460,7 +460,7 @@ impl TaskKind {
 const TASK_TEMPLATES: [TaskTemplate; 5] = [
     TaskTemplate {
         id: "git_pull_project",
-        label: "Git pull project",
+        label: "拉取项目代码",
         kind: TaskKind::Check,
         command: "git",
         args: &["pull"],
@@ -468,7 +468,7 @@ const TASK_TEMPLATES: [TaskTemplate; 5] = [
     },
     TaskTemplate {
         id: "git_push_project",
-        label: "Git push origin main",
+        label: "推送 main 到 origin",
         kind: TaskKind::Check,
         command: "git",
         args: &["push", "origin", "main"],
@@ -476,7 +476,7 @@ const TASK_TEMPLATES: [TaskTemplate; 5] = [
     },
     TaskTemplate {
         id: "pnpm_check_project",
-        label: "Run pnpm check",
+        label: "执行 pnpm check",
         kind: TaskKind::Check,
         command: "pnpm",
         args: &["check"],
@@ -484,7 +484,7 @@ const TASK_TEMPLATES: [TaskTemplate; 5] = [
     },
     TaskTemplate {
         id: "cargo_check_tauri",
-        label: "Run cargo check",
+        label: "执行 cargo check",
         kind: TaskKind::Check,
         command: "cargo",
         args: &["check"],
@@ -492,7 +492,7 @@ const TASK_TEMPLATES: [TaskTemplate; 5] = [
     },
     TaskTemplate {
         id: "pnpm_dev_project",
-        label: "Run pnpm dev",
+        label: "启动 pnpm dev",
         kind: TaskKind::Service,
         command: "pnpm",
         args: &["dev"],

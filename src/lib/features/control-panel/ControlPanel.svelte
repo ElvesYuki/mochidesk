@@ -135,30 +135,30 @@
 
   function getTaskStatusLabel(status: TaskRun["status"]): string {
     return status === "running"
-      ? "Running"
+      ? "运行中"
       : status === "ready"
-        ? "Ready"
+        ? "就绪"
       : status === "success"
-        ? "Success"
+        ? "成功"
         : status === "stopped"
-          ? "Stopped"
-          : "Failed";
+          ? "已停止"
+          : "失败";
   }
 
   function getTaskOutputPreview(run: TaskRun): string {
     if (run.status === "running") {
-      return run.stdout || run.stderr || "Task is still running. Live output will appear here.";
+      return run.stdout || run.stderr || "任务仍在运行中，输出会持续显示在这里。";
     }
 
     if (run.status === "ready") {
-      return run.stdout || run.stderr || "Service is ready and waiting.";
+      return run.stdout || run.stderr || "服务已经就绪，正在等待后续操作。";
     }
 
     if (run.status === "failed" && run.stderr) {
       return run.stderr;
     }
 
-    return run.stderr || run.stdout || "No output captured.";
+    return run.stderr || run.stdout || "没有捕获到输出。";
   }
 
   function getTaskFailureSummary(run: TaskRun): string {
@@ -169,7 +169,7 @@
     const source = run.stderr || run.stdout;
 
     if (!source) {
-      return run.exitCode === null ? "Task failed." : `Task failed with exit ${run.exitCode}.`;
+      return run.exitCode === null ? "任务失败。" : `任务失败，退出码 ${run.exitCode}。`;
     }
 
     const [firstLine] = source
@@ -178,7 +178,7 @@
       .filter(Boolean);
 
     if (!firstLine) {
-      return run.exitCode === null ? "Task failed." : `Task failed with exit ${run.exitCode}.`;
+      return run.exitCode === null ? "任务失败。" : `任务失败，退出码 ${run.exitCode}。`;
     }
 
     return firstLine;
@@ -186,71 +186,71 @@
 
   function getTaskFinishedAtLabel(run: TaskRun): string {
     if (run.finishedAt === null) {
-      return "still running";
+      return "仍在运行";
     }
 
     return formatRelativeTime(run.finishedAt);
   }
 
   function getTaskKindLabel(kind: TaskRun["kind"] | TaskDefinition["kind"]): string {
-    return kind === "service" ? "Service" : "Check";
+    return kind === "service" ? "服务" : "检查";
   }
 
   function getRemoteSkillStageLabel(run: RemoteSkillRun): string {
     return run.stage === "received"
-      ? "Queued"
+      ? "已入队"
       : run.stage === "running"
-        ? "Running"
+        ? "执行中"
       : run.stage === "success"
-        ? "Success"
-        : "Failed";
+        ? "成功"
+        : "失败";
   }
 
   function getRemoteSkillCategoryLabel(category: RemoteSkillRun["category"]): string {
     return category === "deployment"
-      ? "Deployment"
+      ? "部署"
       : category === "service-control"
-        ? "Service"
-        : "Repo Sync";
+        ? "服务控制"
+        : "代码同步";
   }
 
   function getRemoteSkillSummary(run: RemoteSkillRun): string {
     if (run.currentStep) {
-      return `Step: ${run.currentStep}`;
+      return `步骤：${run.currentStep}`;
     }
 
     if (run.stage === "received") {
-      return "Waiting to execute";
+      return "等待执行";
     }
 
-    return "No active step";
+    return "当前没有活动步骤";
   }
 
   function getTriggerTypeLabel(type: RemoteSkillTrigger["type"]): string {
-    return type === "manual" ? "Manual" : "Task Success";
+    return type === "manual" ? "手动触发" : "任务成功后触发";
   }
 
   function getTriggerConfigLabel(trigger: RemoteSkillTrigger): string {
     const config = outboundSkillConfigs.find((item) => item.configId === trigger.skillConfigId);
     if (!config) {
-      return "No linked skill config";
+      return "未关联发送配置";
     }
 
     return `${config.skillId} -> ${config.targetMachineId}`;
   }
 
   function getTriggerStateLabel(triggerId: string): string {
-    return getTriggerIssues(triggerId).length > 0 ? "Blocked" : "Ready to send";
+    return getTriggerIssues(triggerId).length > 0 ? "已阻止" : "可发送";
   }
 
   function getSkillConfigIssues(config: OutboundSkillConfig): string[] {
     const issues: string[] = [];
 
     if (!config.skillId.trim()) issues.push("missing skillId");
-    if (!config.projectId.trim()) issues.push("missing projectId");
-    if (!config.targetMachineId.trim()) issues.push("missing target machine");
-    if (!config.branch.trim()) issues.push("missing branch");
-    if (!config.token.trim()) issues.push("missing token");
+    if (!config.projectId.trim()) issues.push("缺少 projectId");
+    if (!config.targetMachineId.trim()) issues.push("缺少目标机器");
+    if (!config.branch.trim()) issues.push("缺少分支");
+    if (!config.token.trim()) issues.push("缺少 token");
 
     return issues;
   }
@@ -258,14 +258,14 @@
   function getProfileIssues(profile: RemoteSkillProfile): string[] {
     const issues: string[] = [];
 
-    if (!profile.projectId.trim()) issues.push("missing projectId");
-    if (!profile.machineId.trim()) issues.push("missing machineId");
-    if (!profile.paths.repoRoot.trim()) issues.push("missing repo root");
-    if (!profile.branch.trim()) issues.push("missing branch");
-    if (!profile.sharedToken.trim()) issues.push("missing token");
-    if (!profile.tasks.fetchTaskId.trim()) issues.push("missing fetch task");
-    if (!profile.tasks.stopServiceTaskId.trim()) issues.push("missing stop task");
-    if (!profile.tasks.startServiceTaskId.trim()) issues.push("missing start task");
+    if (!profile.projectId.trim()) issues.push("缺少 projectId");
+    if (!profile.machineId.trim()) issues.push("缺少 machineId");
+    if (!profile.paths.repoRoot.trim()) issues.push("缺少仓库目录");
+    if (!profile.branch.trim()) issues.push("缺少分支");
+    if (!profile.sharedToken.trim()) issues.push("缺少 token");
+    if (!profile.tasks.fetchTaskId.trim()) issues.push("缺少 fetch 任务");
+    if (!profile.tasks.stopServiceTaskId.trim()) issues.push("缺少停止任务");
+    if (!profile.tasks.startServiceTaskId.trim()) issues.push("缺少启动任务");
 
     return issues;
   }
@@ -276,19 +276,19 @@
     <header class="panel-header">
       <div class="title-group">
         <div class="badge-row">
-          <p class="eyebrow">MochiDesk Control</p>
+          <p class="eyebrow">MochiDesk 控制台</p>
           <span class="status-pill" class:status-live={udpListening}>
             {udpListening ? "LAN live" : "LAN idle"}
           </span>
         </div>
 
-        <h2>Command Habitat</h2>
+        <h2>控制面板</h2>
         <p class="hero-copy">
-          A dedicated control room for debug loops, local network presence, and the task runner that will land next.
+          这里集中管理调试循环、局域网通信、远程技能和本地任务执行。
         </p>
       </div>
 
-      <button type="button" class="icon-button" onclick={onClose}>Close</button>
+      <button type="button" class="icon-button" onclick={onClose}>关闭</button>
     </header>
 
     <div class="dashboard-layout">
@@ -301,7 +301,7 @@
             activeSection = "debug";
           }}
         >
-          Debug
+          调试
         </button>
         <button
           type="button"
@@ -311,7 +311,7 @@
             activeSection = "lan";
           }}
         >
-          LAN
+          局域网
         </button>
         <button
           type="button"
@@ -321,7 +321,7 @@
             activeSection = "skills";
           }}
         >
-          Skills
+          技能
         </button>
         <button
           type="button"
@@ -331,7 +331,7 @@
             activeSection = "triggers";
           }}
         >
-          Triggers
+          触发器
         </button>
         <button
           type="button"
@@ -341,7 +341,7 @@
             activeSection = "profiles";
           }}
         >
-          Profiles
+          接收配置
         </button>
         <button
           type="button"
@@ -351,60 +351,60 @@
             activeSection = "tasks";
           }}
         >
-          Tasks
+          任务
         </button>
       </nav>
 
       <div class="content-column">
         <section class="hero-strip" aria-label="Control panel summary">
           <div class="summary-chip">
-            <span class="status-label">System loop</span>
-            <strong>{debugCycleEnabled ? debugCycleStage : "off"}</strong>
+            <span class="status-label">系统循环</span>
+            <strong>{debugCycleEnabled ? debugCycleStage : "关闭"}</strong>
           </div>
 
           <div class="summary-chip">
-            <span class="status-label">Codex loop</span>
-            <strong>{debugCodexCycleEnabled ? debugCodexStage : "off"}</strong>
+            <span class="status-label">Codex 循环</span>
+            <strong>{debugCodexCycleEnabled ? debugCodexStage : "关闭"}</strong>
           </div>
 
           <div class="summary-chip">
-            <span class="status-label">Peers</span>
+            <span class="status-label">在线设备</span>
             <strong>{getOnlinePeerCount()}/{peers.length}</strong>
           </div>
 
           <div class="summary-chip" class:summary-chip-live={udpListening}>
-            <span class="status-label">LAN</span>
-            <strong>{udpListening ? "running" : "idle"}</strong>
+            <span class="status-label">局域网</span>
+            <strong>{udpListening ? "运行中" : "空闲"}</strong>
           </div>
         </section>
 
         {#if activeSection === "debug"}
           <section class="panel-section">
             <div class="section-heading">
-              <h3>Debug Controls</h3>
-              <p>The old hidden shortcuts still work, but this panel is now the primary control surface.</p>
+              <h3>调试控制</h3>
+              <p>原来的隐藏快捷手势仍然可用，不过现在建议主要在这个面板里操作。</p>
             </div>
 
             <div class="button-row">
               <button type="button" class:active={debugCycleEnabled} onclick={onToggleSystemDebug}>
-                {debugCycleEnabled ? `Stop system loop (${debugCycleStage})` : "Start system loop"}
+                {debugCycleEnabled ? `停止系统循环（${debugCycleStage}）` : "启动系统循环"}
               </button>
               <button type="button" class:active={debugCodexCycleEnabled} onclick={onToggleCodexDebug}>
-                {debugCodexCycleEnabled ? `Stop Codex loop (${debugCodexStage})` : "Start Codex loop"}
+                {debugCodexCycleEnabled ? `停止 Codex 循环（${debugCodexStage}）` : "启动 Codex 循环"}
               </button>
             </div>
 
             <div class="detail-grid">
               <div class="detail-card">
-                <span class="status-label">System mood</span>
-                <strong>{debugCycleEnabled ? debugCycleStage : "off"}</strong>
-                <p>Use this to force the avatar through idle, calm, alert, and busy states.</p>
+                <span class="status-label">系统情绪</span>
+                <strong>{debugCycleEnabled ? debugCycleStage : "关闭"}</strong>
+                <p>用于强制切换桌宠在 idle、calm、alert、busy 四种系统状态下的表现。</p>
               </div>
 
               <div class="detail-card">
-                <span class="status-label">Codex activity</span>
-                <strong>{debugCodexCycleEnabled ? debugCodexStage : "off"}</strong>
-                <p>Use this to inspect how semantic Codex states alter motion and attention.</p>
+                <span class="status-label">Codex 活动</span>
+                <strong>{debugCodexCycleEnabled ? debugCodexStage : "关闭"}</strong>
+                <p>用于观察不同 Codex 语义状态如何影响动作、注意力和反馈表现。</p>
               </div>
             </div>
           </section>
@@ -413,40 +413,40 @@
         {#if activeSection === "lan"}
           <section class="panel-section">
             <div class="section-heading">
-              <h3>LAN Presence</h3>
-              <p>Stage 1 UDP discovery and message debugging for local Mochi-to-Mochi communication.</p>
+              <h3>局域网状态</h3>
+              <p>当前是 UDP 发现与消息调试阶段，用于局域网内 Mochi 之间通信。</p>
             </div>
 
             <div class="status-row">
               <div class="status-card">
-                <span class="status-label">Listener</span>
-                <strong>{udpListening ? "Running" : "Stopped"}</strong>
+                <span class="status-label">监听器</span>
+                <strong>{udpListening ? "运行中" : "已停止"}</strong>
               </div>
               <div class="status-card">
-                <span class="status-label">Port</span>
+                <span class="status-label">端口</span>
                 <strong>{udpPort}</strong>
               </div>
               <div class="status-card">
-                <span class="status-label">Peers</span>
+                <span class="status-label">设备</span>
                 <strong>{peers.length}</strong>
               </div>
             </div>
 
             <div class="button-row">
               <button type="button" class:active={udpListening} disabled={networkBusy} onclick={onToggleUdpListener}>
-                {udpListening ? "Stop UDP listener" : "Start UDP listener"}
+                {udpListening ? "停止 UDP 监听" : "启动 UDP 监听"}
               </button>
               <button type="button" disabled={networkBusy || !udpListening} onclick={onBroadcastHello}>
-                Broadcast hello
+                广播 hello
               </button>
-              <button type="button" disabled={networkBusy} onclick={onRefreshNetwork}>Refresh peers</button>
+              <button type="button" disabled={networkBusy} onclick={onRefreshNetwork}>刷新设备列表</button>
             </div>
 
             <div class="list-grid">
               <div class="panel-list">
-                <div class="list-title">Known peers</div>
+                <div class="list-title">已发现设备</div>
                 {#if peers.length === 0}
-                  <p class="empty-state">No peers yet. Start UDP and broadcast a hello.</p>
+                  <p class="empty-state">暂时还没有发现设备。先启动 UDP，再广播一次 hello。</p>
                 {:else}
                   {#each peers as peer}
                     <div class="list-item">
@@ -464,9 +464,9 @@
               </div>
 
               <div class="panel-list">
-                <div class="list-title">Recent events</div>
+                <div class="list-title">最近事件</div>
                 {#if recentEvents.length === 0}
-                  <p class="empty-state">No network events yet.</p>
+                  <p class="empty-state">暂时还没有网络事件。</p>
                 {:else}
                   {#each recentEvents.slice().reverse() as event}
                     <div class="list-item">
@@ -489,14 +489,14 @@
         {#if activeSection === "skills"}
           <section class="panel-section">
             <div class="section-heading">
-              <h3>Remote Skills</h3>
-              <p>Observe incoming remote skill execution status across the local network.</p>
+              <h3>远程技能</h3>
+              <p>查看局域网内远程技能请求的接收、执行进度和最终结果。</p>
             </div>
 
             <div class="panel-list">
-              <div class="list-title">Recent skill runs</div>
+              <div class="list-title">最近执行记录</div>
                 {#if remoteSkillRuns.length === 0}
-                  <p class="empty-state">No remote skill execution has been recorded yet.</p>
+                  <p class="empty-state">暂时还没有远程技能执行记录。</p>
                 {:else}
                   {#each remoteSkillRuns as run}
                     <div
@@ -527,7 +527,7 @@
                       <div class="meta">{run.targetMachineId} · {formatRelativeTime(run.updatedAt)}</div>
                       <div class="meta">{run.projectId} · {getRemoteSkillSummary(run)}</div>
                       <p>{run.detail}</p>
-                      <div class="skill-request-id">request: {run.requestId}</div>
+                      <div class="skill-request-id">请求 ID：{run.requestId}</div>
                     </div>
                   {/each}
                 {/if}
@@ -538,27 +538,27 @@
         {#if activeSection === "triggers"}
           <section class="panel-section">
             <div class="section-heading">
-              <h3>Triggers</h3>
-              <p>Configure when this machine should automatically send remote skill requests.</p>
+              <h3>触发器</h3>
+              <p>配置这台机器在什么时机自动发送远程技能请求。</p>
             </div>
 
             <div class="toolbar-row">
-              <button type="button" onclick={() => onAddTrigger("manual")}>Add manual trigger</button>
-              <button type="button" onclick={() => onAddTrigger("task-success")}>Add task trigger</button>
-              <button type="button" onclick={onAddSkillConfig}>Add outbound config</button>
-              <button type="button" onclick={() => onRevealConfig(true)}>Open config folder</button>
-              <button type="button" onclick={() => onRevealConfig(false)}>Open config file</button>
+              <button type="button" onclick={() => onAddTrigger("manual")}>新增手动触发器</button>
+              <button type="button" onclick={() => onAddTrigger("task-success")}>新增任务触发器</button>
+              <button type="button" onclick={onAddSkillConfig}>新增发送配置</button>
+              <button type="button" onclick={() => onRevealConfig(true)}>打开配置目录</button>
+              <button type="button" onclick={() => onRevealConfig(false)}>打开配置文件</button>
             </div>
 
             {#if configPath}
-              <p class="config-path">Config file: {configPath}</p>
+              <p class="config-path">配置文件：{configPath}</p>
             {/if}
 
             <div class="detail-grid">
               <div class="panel-list">
-                <div class="list-title">Trigger rules</div>
+                <div class="list-title">触发规则</div>
                 {#if triggers.length === 0}
-                  <p class="empty-state">No triggers configured yet.</p>
+                  <p class="empty-state">暂时还没有触发器配置。</p>
                 {:else}
                   {#each triggers as trigger}
                     <div class="detail-card detail-card-dashed">
@@ -566,10 +566,10 @@
                         <span class="status-label">{trigger.label}</span>
                         <div class="inline-actions">
                           <span class="skill-stage-pill" class:skill-stage-pill-success={trigger.enabled}>
-                            {trigger.enabled ? "Enabled" : "Disabled"}
+                            {trigger.enabled ? "启用中" : "已停用"}
                           </span>
                           <button type="button" class="inline-button inline-button-danger" onclick={() => onDeleteTrigger(trigger.triggerId)}>
-                            Delete
+                            删除
                           </button>
                         </div>
                       </div>
@@ -652,8 +652,8 @@
                       </label>
                       <div class="meta">
                         {trigger.lastTriggeredAt === null
-                          ? "Never fired yet"
-                          : `Last fired ${formatRelativeTime(trigger.lastTriggeredAt)}`}
+                          ? "尚未触发过"
+                          : `最近触发：${formatRelativeTime(trigger.lastTriggeredAt)}`}
                       </div>
                       <div class="toolbar-row">
                         <button
@@ -661,7 +661,7 @@
                           disabled={networkBusy || getTriggerIssues(trigger.triggerId).length > 0}
                           onclick={() => onTestTrigger(trigger.triggerId)}
                         >
-                          Test trigger
+                          测试触发器
                         </button>
                         {#if trigger.type === "manual"}
                           <button
@@ -669,7 +669,7 @@
                             disabled={networkBusy || getTriggerIssues(trigger.triggerId).length > 0}
                             onclick={() => onFireTrigger(trigger.triggerId)}
                           >
-                            Send now
+                            立即发送
                           </button>
                         {/if}
                       </div>
@@ -679,16 +679,16 @@
               </div>
 
               <div class="panel-list">
-                <div class="list-title">Outbound skill configs</div>
+                <div class="list-title">发送配置</div>
                 {#if outboundSkillConfigs.length === 0}
-                  <p class="empty-state">No outbound skill configs yet.</p>
+                  <p class="empty-state">暂时还没有发送配置。</p>
                 {:else}
                   {#each outboundSkillConfigs as config}
                     <div class="detail-card detail-card-dashed">
                       <div class="skill-run-header">
                         <span class="status-label">{config.label}</span>
                         <button type="button" class="inline-button inline-button-danger" onclick={() => onDeleteSkillConfig(config.configId)}>
-                          Delete
+                          删除
                         </button>
                       </div>
                       <strong>{config.skillId}</strong>
@@ -794,25 +794,25 @@
         {#if activeSection === "profiles"}
           <section class="panel-section">
             <div class="section-heading">
-              <h3>Receiver Profiles</h3>
-              <p>Configure what this machine is allowed to run when it receives a remote skill request.</p>
+              <h3>接收端配置</h3>
+              <p>配置这台机器收到远程技能请求后允许执行什么，以及在哪个目录执行。</p>
             </div>
 
             <div class="toolbar-row">
-              <button type="button" onclick={onAddProfile}>Add profile</button>
+              <button type="button" onclick={onAddProfile}>新增接收配置</button>
             </div>
 
             <div class="panel-list">
-              <div class="list-title">Local execution profiles</div>
+              <div class="list-title">本机执行配置</div>
               {#if profiles.length === 0}
-                <p class="empty-state">No receiver profile available yet.</p>
+                <p class="empty-state">暂时还没有接收端配置。</p>
               {:else}
                 {#each profiles as profile}
                   <div class="detail-card detail-card-dashed">
                     <div class="skill-run-header">
                       <span class="status-label">{profile.projectId}</span>
                       <button type="button" class="inline-button inline-button-danger" onclick={() => onDeleteProfile(profile.projectId)}>
-                        Delete
+                        删除
                       </button>
                     </div>
                     <strong>{profile.machineId}</strong>
@@ -1025,22 +1025,22 @@
         {#if activeSection === "tasks"}
           <section class="panel-section panel-section-muted">
             <div class="section-heading">
-              <h3>Tasks</h3>
-              <p>Run a small set of safe, local developer tasks without leaving the control panel.</p>
+              <h3>任务</h3>
+              <p>在不离开控制面板的情况下执行一组受控的本地开发任务。</p>
             </div>
 
             <div class="detail-grid">
               <div class="panel-list">
-                <div class="list-title">Available tasks</div>
+                <div class="list-title">可用任务</div>
                 {#if runningTaskId !== null}
                   <div class="task-running-banner">
                     <span class="task-running-dot" aria-hidden="true"></span>
-                    <span>A task is running. You can stop it below if needed.</span>
-                    <button type="button" class="task-stop-button" onclick={onStopTask}>Stop task</button>
+                    <span>当前有任务正在运行，如有需要可以在这里停止。</span>
+                    <button type="button" class="task-stop-button" onclick={onStopTask}>停止任务</button>
                   </div>
                 {/if}
                 {#if tasks.length === 0}
-                  <p class="empty-state">No task definitions available yet.</p>
+                  <p class="empty-state">暂时还没有可用任务。</p>
                 {:else}
                   {#each tasks as task}
                   <div class="task-item">
@@ -1058,11 +1058,11 @@
                         onclick={() => onRunTask(task.id)}
                       >
                         {#if runningTaskId === task.id}
-                          Running...
+                          运行中...
                         {:else if runningTaskId !== null}
-                          Busy
+                          忙碌
                         {:else}
-                          Run
+                          运行
                         {/if}
                       </button>
                     </div>
@@ -1071,9 +1071,9 @@
               </div>
 
               <div class="panel-list">
-                <div class="list-title">Recent runs</div>
+                <div class="list-title">最近运行</div>
                 {#if recentTaskRuns.length === 0}
-                  <p class="empty-state">No task has been run from this panel yet.</p>
+                  <p class="empty-state">暂时还没有从这个面板运行过任务。</p>
                 {:else}
                   {#each recentTaskRuns.slice().reverse() as run}
                     <button
@@ -1149,7 +1149,7 @@
         >
           <header class="task-run-modal-header">
             <div>
-              <p class="eyebrow">Task Output</p>
+              <p class="eyebrow">任务输出</p>
               <h3>{selectedTaskRun.label}</h3>
             </div>
 
@@ -1158,7 +1158,7 @@
               class="icon-button"
               onclick={closeSelectedTaskRun}
             >
-              Close
+              关闭
             </button>
           </header>
 
